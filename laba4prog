@@ -1,0 +1,184 @@
+program lab4;
+
+uses Crt;
+
+type
+  PNode = ^Node;
+  Node = record
+    data: integer;
+    prev, next: PNode;
+  end;
+
+const
+  MENU_COUNT = 7;
+  MenuItems: array[1..MENU_COUNT] of string = (
+    'Инициализация (Создать)',
+    'Добавить в начало',
+    'Добавить в конец',
+    'Удалить из начала',
+    'Удалить из конца',
+    'Показать дек',
+    'Выход'
+  );
+
+var
+  head, tail: PNode;
+  pos: integer;
+  ch: char;
+  s: string;
+  x, code: integer;
+  initialized: boolean;
+
+procedure OchistitMemory;
+var p: PNode;
+begin
+  while head <> nil do
+  begin
+    p := head;
+    head := head^.next;
+    dispose(p);
+  end;
+  tail := nil;
+end;
+
+procedure Inicializaciya;
+begin
+  OchistitMemory;
+  head := nil;
+  tail := nil;
+  initialized := true;
+  writeln('Дек успешно создан!');
+  delay(800);
+end;
+
+procedure DobavitVNachalo(val: integer);
+var p: PNode;
+begin
+  new(p);
+  p^.data := val;
+  p^.prev := nil;
+  p^.next := head;
+  if head <> nil then head^.prev := p else tail := p;
+  head := p;
+end;
+
+procedure DobavitVKonec(val: integer);
+var p: PNode;
+begin
+  new(p);
+  p^.data := val;
+  p^.next := nil;
+  p^.prev := tail;
+  if tail <> nil then tail^.next := p else head := p;
+  tail := p;
+end;
+
+procedure UdalitIzNachala;
+var p: PNode;
+begin
+  if head = nil then exit;
+  p := head;
+  head := head^.next;
+  if head <> nil then head^.prev := nil else tail := nil;
+  dispose(p);
+end;
+
+procedure UdalitIzKonca;
+var p: PNode;
+begin
+  if tail = nil then exit;
+  p := tail;
+  tail := tail^.prev;
+  if tail <> nil then tail^.next := nil else head := nil;
+  dispose(p);
+end;
+
+procedure PokazatDek;
+var p: PNode;
+begin
+  ClrScr;
+  if head = nil then
+    writeln('Дек пуст.')
+  else
+  begin
+    write('Элементы дека: ');
+    p := head;
+    while p <> nil do
+    begin
+      write('[', p^.data, '] ');
+      p := p^.next;
+    end;
+    writeln;
+  end;
+  writeln;
+  writeln('Нажми любую кнопку...');
+  ReadKey;
+end;
+
+procedure RisovatMenu;
+var i: integer;
+begin
+  ClrScr;
+  writeln('=== УПРАВЛЕНИЕ ДЕКОМ ===');
+  if initialized then writeln('Статус: ГОТОВ') else writeln('Статус: НЕ СОЗДАН');
+  writeln('------------------------');
+
+  for i := 1 to MENU_COUNT do
+    if i = pos then
+      writeln('-> ', i, '. ', MenuItems[i])
+    else
+      writeln('   ', i, '. ', MenuItems[i]);
+end;
+
+begin
+  initialized := false;
+  pos := 1;
+  head := nil;
+  tail := nil;
+
+  while true do
+  begin
+    RisovatMenu;
+    ch := ReadKey;
+
+    case ch of
+      #38: if pos > 1 then dec(pos) else pos := MENU_COUNT;
+      #40: if pos < MENU_COUNT then inc(pos) else pos := 1;
+     #13:
+begin
+  if (pos <> 1) and (pos <> 7) and (not initialized) then
+  begin
+    writeln('Сначала создай дек.');
+    ReadKey;
+    continue;
+  end;
+
+  case pos of
+    1: Inicializaciya;
+
+    2, 3:
+      begin
+        write('Введите целое число: ');
+        readln(s);
+        val(s, x, code);
+        if code <> 0 then
+        begin
+          writeln('Некорректные данные.');
+          ReadKey;
+        end;
+
+        if pos = 2 then DobavitVNachalo(x)
+                   else DobavitVKonec(x);
+      end;
+
+    4: UdalitIzNachala;
+    5: UdalitIzKonca;
+    6: PokazatDek;
+    7: break;
+  end;
+end;
+        end;
+    end;
+
+  OchistitMemory;
+end.
